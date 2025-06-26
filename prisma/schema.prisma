@@ -13,6 +13,29 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
         
+model Tweet {
+    id        String      @id @default(cuid())
+    userId    String
+    content   String
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    likes Like[]
+
+    @@index([userId])
+}
+
+model Like {
+    userId String
+    tweetId String
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    tweet Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+
+    @@id([userId, tweetId])
+    @@index([userId])
+    @@index([tweetId])
+}
 
 model Post {
     id        Int      @id @default(autoincrement())
@@ -62,7 +85,13 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
+
     posts         Post[]
+    tweets        Tweet[]
+    likes         Like[]
+
+    followers     Follow[]  @relation("Following")
+    following     Follow[]  @relation("Followers")
 }
 
 model VerificationToken {
@@ -71,4 +100,16 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Follow {
+    followerId String
+    followingId String
+
+    follower   User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+    following  User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+    @@id([followerId, followingId])
+    @@index([followerId])
+    @@index([followingId])
 }
